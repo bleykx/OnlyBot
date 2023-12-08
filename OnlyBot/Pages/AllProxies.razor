@@ -1,0 +1,69 @@
+﻿@page "/allProxies";
+@inject NavigationManager Navigation;
+@inject IProxyRepository _proxyRepository;
+@inject IJSRuntime JSRuntime;
+
+<PageTitle>Proxy</PageTitle>
+
+<_ProxiesFilters></_ProxiesFilters>
+<table class="table table-striped">
+    <thead>
+        <tr class="table-primary">Name</tr>
+        <tr class="table-primary">IP</tr>
+        <tr class="table-primary">Port</tr>
+        <tr class="table-primary">Username</tr>
+        <tr class="table-primary">Password</tr>
+    </thead>
+    <tbody>
+        @foreach (var proxy in Proxies)
+        {
+            <tr>
+                <td>@proxy.Name</td>
+                <td>@proxy.IP</td>
+                <td>@proxy.Port</td>
+                <td>@proxy.Username</td>
+                <td>@proxy.Password</td>
+                <td>
+                    <button class="btn btn-danger" @onclick="() => DeleteProxy(proxy.Id)">Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    public List<Proxy> Proxies { get; set; } = new List<Proxy>();
+    private HubConnection? proxiesHubConnection;
+
+    protected async override Task OnInitializedAsync()
+    {
+        proxiesHubConnection = new HubConnectionBuilder()
+        .WithUrl(Navigation.ToAbsoluteUri("/proxieshub"))
+        .Build();
+
+        proxiesHubConnection.On<string>("RefreshProxies", proxies =>
+        {
+            if (proxies != null)
+                Proxies = JsonConvert.DeserializeObject<List<Proxy>>(proxies)!;
+            else
+                Proxies = new List<Proxy>();
+            InvokeAsync(StateHasChanged);
+        });
+
+        await proxiesHubConnection.StartAsync();
+    }
+
+    protected async override Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Proxies = await _proxyRepository.GetAll();
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteProxy(Guid id)
+    {
+        await _proxyRepository.Delete(id);
+    }
+}

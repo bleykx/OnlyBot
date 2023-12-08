@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
+		<PackageReference Include="SqlTableDependency" Version="8.5.8" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\OnlyBot_DataAccess\OnlyBot_DataAccess.csproj" />
+		<ProjectReference Include="..\OnlyBot_Models\OnlyBot_Models.csproj" />
+	</ItemGroup>
+
+</Project>

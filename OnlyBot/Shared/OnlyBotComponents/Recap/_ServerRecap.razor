@@ -1,0 +1,66 @@
+﻿<div class="card border-primary mb-3" style="background-color:gray;">
+    <div class="row g-0" style="max-height:250px">
+        <div class="col-md-4 mx-auto">
+            <a href="BotsByServer/@ServerName">
+                <img src="@ImagePath" class="card-img-top" alt="@ServerName">
+            </a>
+        </div>
+        <div class="col-md-8" style="position: relative;">
+            <div class="card-body">
+                <a href="BotsByServer/@ServerName">
+                    <h5 class="card-title text-center">@ServerName</h5>
+                </a>
+                <div class="center-container">
+                    <p class="card-text text-center ">Total Kamas : @Kamas</p>
+                    <div class="image-container">
+                        <img src="/images/Kama.webp" style="max-width:14px;max-height:14px;margin-left:-5px;margin-bottom:15px;" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <CascadingValue Value="@BotSell">
+                            <_BotRecapMini></_BotRecapMini>
+                        </CascadingValue>
+                    </div>
+                    <div class="col-6">
+                        <CascadingValue Value="@BotBank">
+                            <_BotRecapMini></_BotRecapMini>
+                        </CascadingValue>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? ServerName { get; set; }
+    public string ImagePath => $"/images/Servers/{ServerName}.webp";
+    [CascadingParameter]
+    public IEnumerable<Bot>? Bots { get; set; }
+    [Parameter]
+    public string? Kamas { get; set; }
+    public Bot? BotBank;
+    public Bot? BotSell;
+
+    protected override void OnInitialized()
+    {
+
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Bots != null)
+        {
+            BotBank = Bots.FirstOrDefault(m => m.Script.Type == ScriptTypeEnum.Bank);
+            BotSell = Bots.FirstOrDefault(m => m.Script.Type == ScriptTypeEnum.Sell);
+        }
+        else
+        {
+            BotBank = null;
+            BotSell = null;
+        }
+        base.OnParametersSet();
+    }
+}
