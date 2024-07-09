@@ -1,0 +1,139 @@
+﻿<div class="card @CardClass text-bg-light" style="width:18rem;border-width:5px;background-color:#B9B4C7;">
+    <div class="container text-center">
+        <div class="row">
+            <div class="col-3 pt-2">
+                <span class="badge rounded-pill @Bg" style="border-color:black">@((Bot.IsConnected) ? "Connected" : "Disconnected")</span>
+                <div class="row mx-1">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input custom-switch-bot-connexion" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="@Bot.IsConnected">
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 pt-2">
+                <div class="mx-auto">
+                    <img src="@BreedImgPath" class="card-img-top mx-auto" alt="@((Bot != null) ? Bot.Breed.ToString() : "None")" style="max-height:67px;max-width:67px;">
+                </div>
+            </div>
+            <div class="col-3 pt-2">
+                <div class="row">
+                    <p class="card-text text-end">
+                        <small class="text-body-primary ">@(Bot.Script != null ? Bot.Script.Type : "None")<br /></small>
+                    </p>
+                </div>
+                <div class="row">
+                    <div class="float-end">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input float-end custom-switch-@ScriptType" type="checkbox" role="switch" id="flexSwitchCheckDefault" checked="@Bot.ScriptIsRunning">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="row">
+                            <p class="card-text fw-bold text-start">@(String.IsNullOrEmpty(Bot.Name) ? "Not created yet" : Bot.Name )</p>
+                        </div>
+                        <div class="row">
+                            <p class="card-text text-start">
+                                <small class="text-body-primary ">@(Bot.Server != 0 ? Bot.Server : "None")<br /></small>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="row">
+                            <p class="card-text fw-bold text-end">
+                                <small class="text-body-primary">LVL @Bot.Level<br /></small>
+                            </p>
+                        </div>
+                        <div class="progress position-relative">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:@ExperiencePercent;background-color:green" aria-valuenow="@ExperiencePercent" aria-valuemin="0" aria-valuemax="100"></div>
+                            <small class="justify-content-center d-flex position-absolute w-100 fw-bold" style="color:white">@ExperiencePercent</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5 text-start">
+                        <a href="botInfo/@Bot.Id.ToString()" class="btn @ButtonClass">Infos</a>
+                    </div>
+                    <div class="col-7 text-end">
+                        <div class="row">
+                            <div class="col-10">
+                                <p class="card-text">
+                                    <small class="text-body-primary" style="margin-right:-1rem;">@Totalkamas<br /></small>
+                                </p>
+                            </div>
+                            <div class="col-2">
+                                <img src="/images/Kama.webp" style="max-width:14px;max-height:14px;margin-left:-3px;margin-bottom:0.2rem" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Bot? Bot { get; set; }
+    public string? BreedImgPath;
+    public string? Bg;
+    public string? CardClass;
+    public string? ButtonClass;
+    public string? ScriptType => Bot.Script != null ? Bot?.Script.Type.ToString().ToLower() : "none";
+    public string Totalkamas => Convert.ToDouble(Bot?.Inventories.Sum(i => i.Kamas)).ToString("N0");
+    public string ExperiencePercent => Bot?.ExperiencePercent.ToString() + "%" ?? "0" + "%";
+
+    protected override void OnInitialized()
+    {
+        if (Bot == null)
+        {
+            Bg = "text-bg-secondary";
+            BreedImgPath = "images/Breeds/none.png";
+            CardClass = "card"; // dark grey
+        }
+        else
+        {
+            BreedImgPath = $"/images/Breeds/{Bot?.Breed}.png";
+            if (Bot!.IsConnected)
+            {
+                Bg = "text-bg-success";
+            }
+            else
+            {
+                Bg = "text-bg-danger";
+            }
+            CardClass = Bot.Script != null ? "custom-card-" + Bot.Script.Type.ToString().ToLower() : "custom-card-none";
+            ButtonClass = Bot.Script != null ? "custom-btn-" + Bot.Script.Type.ToString().ToLower() : "custom-btn-none";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Bot == null)
+        {
+            Bg = "text-bg-secondary";
+            BreedImgPath = "images/Breeds/none.png";
+            CardClass = "#444444"; // dark grey
+        }
+        else
+        {
+            BreedImgPath = $"/images/Breeds/{Bot?.Breed}.png";
+            if (Bot!.IsConnected)
+            {
+                Bg = "text-bg-success";
+            }
+            else
+            {
+                Bg = "text-bg-danger";
+            }
+
+            CardClass = Bot.Script != null ?  "custom-card-" + Bot.Script.Type.ToString().ToLower() : "custom-card-none";
+            ButtonClass = Bot.Script != null ? "custom-btn-" + Bot.Script.Type.ToString().ToLower() : "custom-btn-none";
+        }
+        base.OnParametersSet();
+    }
+}

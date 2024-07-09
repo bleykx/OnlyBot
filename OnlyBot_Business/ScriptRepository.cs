@@ -1,44 +1,17 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using OnlyBot_Business.Hubs;
+﻿using Microsoft.EntityFrameworkCore;
 using OnlyBot_Business.IRepository;
 using OnlyBot_DataAccess;
 using OnlyBot_Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using TableDependency.SqlClient;
-using TableDependency.SqlClient.Base.EventArgs;
 
 namespace OnlyBot_Business
 {
     public class ScriptRepository : IScriptRepository
     {
-        private readonly IHubContext<ScriptHub> _hubContext;
         private readonly ApplicationDbContext _context;
-        private readonly SqlTableDependency<Script> _dependency;
-        public ScriptRepository(ApplicationDbContext context, IHubContext<ScriptHub> hubContext, IConfiguration configuration)
+
+        public ScriptRepository(ApplicationDbContext context)
         {
             _context = context;
-            _hubContext = hubContext;
-            _dependency = new SqlTableDependency<Script>(configuration.GetConnectionString("DefaultConnection"), "Scripts");
-            _dependency.OnChanged += Changed;
-            _dependency.Start();
-        }
-
-        private async void Changed(object sender, RecordChangedEventArgs<Script> e)
-        {
-            var scripts = await GetAll();
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-            await _hubContext.Clients.All.SendAsync("RefreshScripts", JsonConvert.SerializeObject(scripts, Formatting.Indented, settings));
         }
 
         public async Task<Script> Create(Script Script)

@@ -1,0 +1,102 @@
+﻿@inject IJSRuntime JSRuntime
+<div class="row row-cols-1 row-cols-md-1 g-3">
+    <div class="overflow-auto" style="max-height: 90vh;scrollbar-width: none;">
+        <div class="list-group">
+            @foreach (var bot in Bots!)
+            {
+                var buttonClass = "btn-outline-custom-" + bot.Script.Type.ToString().ToLower();
+                var breedImgPath = $"/images/Breeds/{bot.Breed.ToString().ToLower()}{bot.Gender}Mini.jpg";
+                var cardClass = "custom-card-" + bot.Script.Type.ToString().ToLower();
+                <div class="col mb-3">
+                    <div class="card @cardClass" @onclick="() => OnCardClick(bot)" style="border-width:3px;">
+                        <div class="row g-0">
+                            <div class="col-3">
+                                <img src="@breedImgPath" alt="@bot.Breed" class="img-fluid rounded-start" />
+                            </div>
+                            <div class="col-9">
+                                <div class="card-body">
+                                    <div class="row" style="width:auto;margin-top:-0.7rem;">
+                                        <div class="col-1">
+                                            @if (bot.ScriptIsRunning)
+                                            {
+                                                <span class="position-absolute p-2 border border-light rounded-circle" style="margin-top:5px;background-color:#00ffff;"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="position-absolute p-2 border border-light rounded-circle" style="margin-top:5px;background-color:#6D6D6D"></span>
+                                            }
+                                        </div>
+                                        <div class="col-10">
+                                            @if (bot.Id.ToString() == SelectedBotId)
+                                            {
+                                                <input type="radio" class="btn-check" name="botSelect" id="@bot.Name" autocomplete="off" checked>
+                                            }
+                                            else
+                                            {
+                                                <input type="radio" class="btn-check" name="botSelect" id="@bot.Name" autocomplete="off">
+                                            }
+                                            <label class="btn btn-sm @buttonClass" for="@bot.Name">@bot.Name</label>
+                                            @if (bot.IsConnected)
+                                            {
+                                                <span class="position-absolute p-2 border border-light rounded-circle" style="margin-top:5px;margin-left:5px;background-color:#00ff00;"></span>
+                                            }
+                                            else
+                                            {
+                                                <span class="position-absolute p-2 border border-light rounded-circle" style="margin-top:5px;margin-left:5px;background-color:#ff0000"></span>
+                                            }
+                                        </div>
+
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-6" styl>
+                                            <small>@bot.Script.Type</small>
+                                        </div>
+                                        <div class="col-6 text-end">
+                                            <small>@bot.Server</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public List<Bot>? Bots { get; set; }
+    [Parameter]
+    public Bot SelectedBot { get; set; } = new Bot();
+    [Parameter]
+    public EventCallback<Bot> OnBotSelect { get; set; }
+
+    public string? SelectedBotId { get; set; }
+
+    protected override void OnInitialized()
+    {
+        SelectedBotId = SelectedBot.Id.ToString();
+    }
+
+    private async Task SelectBot()
+    {
+        foreach (var bot in Bots)
+        {
+            var isChecked = await JSRuntime.InvokeAsync<bool>("checkboxInterop.checkCheckbox", bot.Name);
+            if (isChecked)
+            {
+                await OnBotSelect.InvokeAsync(bot);
+                return;
+            }
+        }
+    }
+
+    private async Task OnCardClick(Bot bot)
+    {
+        await JSRuntime.InvokeVoidAsync("checkboxInterop.initCheckbox", bot.Name, true);
+        await OnBotSelect.InvokeAsync(bot);
+        return;
+    }
+}

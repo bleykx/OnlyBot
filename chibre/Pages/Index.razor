@@ -1,0 +1,93 @@
+﻿@page "/"
+@inject IBotRepository _botRepository
+@inject IInventoryRepository _inventoryRepository
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+
+@if (IsProcessing)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    var totalKamas = Inventories.Sum(m => m.Kamas);
+    <_TotalRecap Bots="@Bots" TotalKamas="@totalKamas" />
+}
+
+@code {
+    public bool IsProcessing { get; set; } = false;
+    public List<Bot> Bots { get; set; } = new List<Bot>();
+    public List<Inventory> Inventories { get; set; } = new List<Inventory>();
+    private HubConnection? botsHubConnection;
+    private HubConnection? inventoriesHubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsProcessing = true;
+        Bots = await _botRepository.GetAll();
+        Inventories = Bots.SelectMany(m => m.Inventories).ToList();
+        IsProcessing = false;
+
+        botsHubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/botshub"))
+            .Build();
+
+        botsHubConnection.On<string>("RefreshBots", bots =>
+        {
+            if(bots != null)
+                Bots = JsonConvert.DeserializeObject<List<Bot>>(bots)!;
+            else
+                Bots = new List<Bot>(); 
+            InvokeAsync(StateHasChanged);
+        });
+
+        inventoriesHubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/inventorieshub"))
+            .Build();
+
+        inventoriesHubConnection.On<string>("RefreshInventories", inventories =>
+        {
+            if(inventories != null)
+            {
+                var inventoriesList = JsonConvert.DeserializeObject<List<Inventory>>(inventories)!;
+                foreach (var inventory in inventoriesList)
+                {
+                    var bot = Bots.FirstOrDefault(m => m.Id == inventory.BotId);
+                    if(bot != null)
+                    {
+                        var botInventory = bot.Inventories.FirstOrDefault(m => m.Id == inventory.Id);
+                        if(botInventory != null)
+                        {
+                            botInventory.Kamas = inventory.Kamas;
+                            botInventory.Items = inventory.Items;
+                        }
+                        else
+                        {
+                            bot.Inventories.Add(inventory);
+                        }
+                    }
+                }
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        await inventoriesHubConnection.StartAsync();
+        await botsHubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (botsHubConnection is not null)
+        {
+            await botsHubConnection.DisposeAsync();
+        }
+        if (inventoriesHubConnection is not null)
+        {
+            await inventoriesHubConnection.DisposeAsync();
+        }
+    }
+}

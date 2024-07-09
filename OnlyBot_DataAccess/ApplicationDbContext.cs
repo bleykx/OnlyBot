@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using OnlyBot_Models;
 
 namespace OnlyBot_DataAccess
@@ -12,7 +14,8 @@ namespace OnlyBot_DataAccess
         public DbSet<Proxy> Proxies { get; set; }
         public DbSet<Order> Orders { get; set; }
 
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
         {
 
         }
@@ -28,19 +31,24 @@ namespace OnlyBot_DataAccess
                 .HasForeignKey(i => i.BotId);
             Bots.HasOne(b => b.Script)
                 .WithMany(s => s.Bots)
-                .HasForeignKey(s => s.ScriptId);
+                .HasForeignKey(s => s.ScriptId)
+                .OnDelete(DeleteBehavior.SetNull);
             Bots.HasOne(b => b.Proxy)
                 .WithMany(p => p.Bots)
-                .HasForeignKey(b => b.ProxyId);
+                .HasForeignKey(b => b.ProxyId)
+                .OnDelete(DeleteBehavior.SetNull);
             Bots.HasOne(b => b.Order)
                 .WithMany(o => o.Bots)
-                .HasForeignKey(b => b.OrderId);
+                .HasForeignKey(b => b.OrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+            Bots.ToTable(tb => tb.UseSqlOutputClause(false));
 
             var Scripts = modelBuilder.Entity<Script>();
             Scripts.HasKey(s => s.Id);
             Scripts.Property(s => s.Name).IsRequired();
             Scripts.Property(s => s.Path).IsRequired();
             Scripts.Property(s => s.Type).IsRequired();
+            Scripts.ToTable(tb => tb.UseSqlOutputClause(false));
 
             var Items = modelBuilder.Entity<Item>();
             Items.HasKey(i => i.Id);
@@ -51,12 +59,14 @@ namespace OnlyBot_DataAccess
             Items.Property(i => i.Weight).IsRequired();
             Items.Property(i => i.Type).IsRequired();
             Items.Property(i => i.SubType).IsRequired();
+            Items.ToTable(tb => tb.UseSqlOutputClause(false));
 
             var Inventories = modelBuilder.Entity<Inventory>();
             Inventories.HasKey(i => i.Id);
             Inventories.HasMany(i => i.Items)
                 .WithOne(i => i.Inventory)
                 .HasForeignKey(i => i.InventoryId);
+            Inventories.ToTable(tb => tb.UseSqlOutputClause(false));
 
             var Proxies = modelBuilder.Entity<Proxy>();
             Proxies.HasKey(p => p.Id);
@@ -65,8 +75,7 @@ namespace OnlyBot_DataAccess
             Proxies.Property(p => p.Port).IsRequired();
             Proxies.Property(p => p.SocketType).IsRequired();
             Proxies.Property(p => p.PlanExpirationDate).IsRequired();
-
-            modelBuilder.Entity<Proxy>().ToTable(tb => tb.HasTrigger("TriggerName"));
+            Proxies.ToTable(tb => tb.UseSqlOutputClause(false));
 
             var Orders = modelBuilder.Entity<Order>();
             Orders.HasKey(o => o.Id);
@@ -74,6 +83,7 @@ namespace OnlyBot_DataAccess
             Orders.Property(o => o.Description).IsRequired();
             Orders.Property(o => o.Status).IsRequired();
             Orders.Property(o => o.CreatedAt).IsRequired();
+            Orders.ToTable(tb => tb.UseSqlOutputClause(false));
 
             base.OnModelCreating(modelBuilder);
         }

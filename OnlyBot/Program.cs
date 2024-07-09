@@ -1,36 +1,33 @@
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.EntityFrameworkCore;
-using OnlyBot;
-using OnlyBot_Business;
-using OnlyBot_Business.Hubs;
-using OnlyBot_Business.IRepository;
 using OnlyBot_DataAccess;
 using Blazored.LocalStorage;
-using System;
-using OnlyBot_Business.UnitOfWork;
-using OnlyBot_Models;
+using OnlyBot.IServices;
+using OnlyBot.Services;
+using Microsoft.AspNetCore.Components.Web;
+using OnlyBot;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddBlazoredLocalStorage();
-
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+//builder.Services.AddRazorPages();
+//builder.Services.AddServerSideBlazor();
+//builder.Services.AddSwaggerGen();
+//builder.Services.AddBlazoredLocalStorage();
 
 ServiceProvider serviceProvider = builder.Services.BuildServiceProvider();
 ApplicationDbContext appDbContext = serviceProvider.GetService<ApplicationDbContext>();
 
-builder.Services.AddScoped<IBotRepository, BotRepository>();
-builder.Services.AddScoped<IScriptRepository, ScriptRepository>();
-builder.Services.AddScoped<IItemRepository, ItemRepository>();
-builder.Services.AddScoped<IInventoryRepository, InventoryRepository>();
-builder.Services.AddScoped<IRepository<Proxy>, ProxyRepository>();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:44321/api/") });
+
+builder.Services.AddScoped<IBotService, BotService>();
+builder.Services.AddScoped<IScriptService, ScriptService>();
+builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IProxyService, ProxyService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddResponseCompression(opts =>
 {
@@ -40,39 +37,4 @@ builder.Services.AddResponseCompression(opts =>
 
 builder.Services.AddCors();
 
-var app = builder.Build();
-PrepDb.PrepBot(app);
-
-app.UseResponseCompression();
-
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseSwagger();
-app.UseSwaggerUI();
-app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
-
-app.UseHttpsRedirection();
-
-app.UseStaticFiles();
-
-app.UseRouting();
-
-app.MapBlazorHub();
-app.MapHub<BotsHub>("/botshub");
-app.MapHub<InventoriesHub>("/inventorieshub");
-app.MapHub<ScriptHub>("/scriptshub");
-app.MapHub<ProxiesHub>("/proxieshub");
-app.MapHub<OrdersHub>("/ordershub");
-
-app.MapFallbackToPage("/_Host");
-app.MapControllers();
-
-app.Run();
+await builder.Build().RunAsync();

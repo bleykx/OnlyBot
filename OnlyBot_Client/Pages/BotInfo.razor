@@ -1,0 +1,180 @@
+﻿@page "/botInfo/{BotIdString}"
+@inject IBotService _botService
+@inject IInventoryService _inventoryService
+@inject IScriptService _scriptService
+@inject IProxyService _proxyService
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+
+<PageTitle>BotInfo</PageTitle>
+@if (IsProcessing)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-3">
+            <CascadingValue Value="@Bots">
+                <_BotsListSelector SelectedBot="@Bot" OnBotSelect="@GetSelectedBot"></_BotsListSelector>
+            </CascadingValue>
+        </div>
+        <div class="col-8">
+            <CascadingValue Value="@Bot">
+                <CascadingValue Value="@Scripts">
+                    <CascadingValue Value="@Proxies">
+                        <_BotInfosCard></_BotInfosCard>
+                    </CascadingValue>
+                </CascadingValue>
+            </CascadingValue>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string BotIdString { get; set; } = string.Empty;
+    public List<Bot> Bots { get; set; } = new();
+    public Bot Bot { get; set; } = new Bot();
+    public bool IsProcessing { get; set; } = false;
+    public List<Script> Scripts { get; set; } = new();
+    public List<Proxy> Proxies { get; set; } = new();
+
+    private HubConnection? botsHubConnection;
+    private HubConnection? inventoriesHubConnection;
+    private HubConnection? scriptsHubConnection;
+    private HubConnection? proxiesHubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        IsProcessing = true;
+        Bots = await _botService.GetAll();
+        Bot = Bots.First(m => m.Id == Guid.Parse(BotIdString));
+        Scripts = await _scriptService.GetAll();
+        Proxies = await _proxyService.GetAll();
+        IsProcessing = false;
+
+        botsHubConnection = new HubConnectionBuilder()
+            // .WithUrl(Navigation.ToAbsoluteUri("/botshub"))
+            .WithUrl("https://localhost:7007/botshub")
+            .Build();
+
+        botsHubConnection.On<string>("RefreshBots", bots =>
+        {
+            if (bots != null)
+            {
+                Bots = JsonConvert.DeserializeObject<List<Bot>>(bots)!;
+                Bot = Bots.Where(m => m.Id == Bot.Id).First();
+            }
+
+            else
+            {
+                Bots = new List<Bot>();
+                Bot = new Bot();
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        inventoriesHubConnection = new HubConnectionBuilder()
+            // .WithUrl(Navigation.ToAbsoluteUri("/inventorieshub"))
+            .WithUrl("https://localhost:7007/inventorieshub")
+            .Build();
+
+        inventoriesHubConnection.On<string>("RefreshInventories", inventories =>
+        {
+            if (inventories != null)
+            {
+                var inventoriesList = JsonConvert.DeserializeObject<List<Inventory>>(inventories)!;
+                foreach (var inventory in inventoriesList)
+                {
+                    if (Bot != null)
+                    {
+                        var botInventory = Bot.Inventories.FirstOrDefault(m => m.Id == inventory.Id);
+                        if (botInventory != null)
+                        {
+                            botInventory.Kamas = inventory.Kamas;
+                            botInventory.Items = inventory.Items;
+                        }
+                        else
+                        {
+                            Bot.Inventories.Add(inventory);
+                        }
+                    }
+                }
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        scriptsHubConnection = new HubConnectionBuilder()
+            //.WithUrl(Navigation.ToAbsoluteUri("/scriptshub"))
+            .WithUrl("https://localhost:7007/scriptshub")
+            .Build();
+
+        scriptsHubConnection.On<string>("RefreshScripts", scripts =>
+        {
+            if (scripts != null)
+            {
+                Scripts = JsonConvert.DeserializeObject<List<Script>>(scripts)!;
+            }
+            else
+            {
+                Scripts = new();
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        proxiesHubConnection = new HubConnectionBuilder()
+            //.WithUrl(Navigation.ToAbsoluteUri("/scriptshub"))
+            .WithUrl("https://localhost:7007/proxieshub")
+            .Build();
+
+        proxiesHubConnection.On<string>("RefreshProxies", proxies =>
+        {
+            if (proxies != null)
+                Proxies = JsonConvert.DeserializeObject<List<Proxy>>(proxies);
+            else
+                Proxies = new();
+        });
+
+        await inventoriesHubConnection.StartAsync();
+        await botsHubConnection.StartAsync();
+        await scriptsHubConnection.StartAsync();
+        await proxiesHubConnection.StartAsync();
+    }
+
+    // protected override void OnParametersSet()
+    // {
+    //     StateHasChanged();
+    // }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        if (botsHubConnection is not null)
+        {
+            await botsHubConnection.DisposeAsync();
+        }
+        if (inventoriesHubConnection is not null)
+        {
+            await inventoriesHubConnection.DisposeAsync();
+        }
+        if (scriptsHubConnection is not null)
+        {
+            await scriptsHubConnection.DisposeAsync();
+        }
+        if (proxiesHubConnection is not null)
+        {
+            await proxiesHubConnection.DisposeAsync();
+        }
+    }
+
+    private async void GetSelectedBot(Bot bot)
+    {
+        Bot = bot;
+        await InvokeAsync(StateHasChanged);
+    }
+}

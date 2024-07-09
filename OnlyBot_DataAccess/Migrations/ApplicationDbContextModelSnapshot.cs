@@ -17,7 +17,7 @@ namespace OnlyBot_DataAccess.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.13")
+                .HasAnnotation("ProductVersion", "8.0.6")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -65,6 +65,9 @@ namespace OnlyBot_DataAccess.Migrations
                     b.Property<bool>("IsConnected")
                         .HasColumnType("bit");
 
+                    b.Property<Guid?>("LastScriptLoadedId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<int>("Level")
                         .HasColumnType("int");
 
@@ -88,7 +91,6 @@ namespace OnlyBot_DataAccess.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("ProxyId")
-                        .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ScriptId")
@@ -102,6 +104,8 @@ namespace OnlyBot_DataAccess.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("LastScriptLoadedId");
+
                     b.HasIndex("OrderId");
 
                     b.HasIndex("ProxyId");
@@ -109,6 +113,8 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasIndex("ScriptId");
 
                     b.ToTable("Bots");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Inventory", b =>
@@ -143,6 +149,8 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasIndex("BotId");
 
                     b.ToTable("Inventories");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Item", b =>
@@ -185,6 +193,8 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasIndex("InventoryId");
 
                     b.ToTable("Items");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Order", b =>
@@ -214,6 +224,8 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Orders");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Proxy", b =>
@@ -255,10 +267,9 @@ namespace OnlyBot_DataAccess.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Proxies", t =>
-                        {
-                            t.HasTrigger("TriggerName");
-                        });
+                    b.ToTable("Proxies");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Script", b =>
@@ -284,10 +295,16 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Scripts");
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("OnlyBot_Models.Bot", b =>
                 {
+                    b.HasOne("OnlyBot_Models.Script", "LastScriptLoaded")
+                        .WithMany()
+                        .HasForeignKey("LastScriptLoadedId");
+
                     b.HasOne("OnlyBot_Models.Order", "Order")
                         .WithMany("Bots")
                         .HasForeignKey("OrderId");
@@ -295,12 +312,14 @@ namespace OnlyBot_DataAccess.Migrations
                     b.HasOne("OnlyBot_Models.Proxy", "Proxy")
                         .WithMany("Bots")
                         .HasForeignKey("ProxyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("OnlyBot_Models.Script", "Script")
                         .WithMany("Bots")
-                        .HasForeignKey("ScriptId");
+                        .HasForeignKey("ScriptId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("LastScriptLoaded");
 
                     b.Navigation("Order");
 

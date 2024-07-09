@@ -1,0 +1,143 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService LocalStorageService
+@inject IJSRuntime JSRuntime
+@inject IBotRepository _botRepository
+
+<div class="container">
+    <img src="/images/Icons/Filter.png" class="" style="max-height:2rem;max-width:2rem;margin-right:1rem" />
+    <div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+        <div class="btn-group" role="group" id="serverFilter">
+            <button type="button" class="btn btn-custom dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                Server
+            </button>
+            <ul class="dropdown-menu">
+                @foreach (var server in Enum.GetValues(typeof(ServerEnum)))
+                {
+                    <li>
+                        <a class="dropdown-item custom-dropdown-item">
+                            <input type="checkbox" class="btn-check" id="@server.ToString()" autocomplete="off" @onchange="UpdateFilters">
+                            <label class="btn btn-outline-custom-filter" for="@server.ToString()">@server.ToString()</label>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="btn-group" role="group" id="scriptFilter">
+            <button type="button" class="btn btn-custom dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                Script Type
+            </button>
+            <ul class="dropdown-menu">
+                @foreach (var scriptType in Enum.GetValues(typeof(ScriptTypeEnum)))
+                {
+                    var btnClass = "btn-outline-custom-" + scriptType.ToString().ToLower();
+                    <li>
+                        <a class="dropdown-item">
+                            <input type="checkbox" class="btn-check" id="@scriptType.ToString()" autocomplete="off" @onchange="UpdateFilters">
+                            <label class="btn @btnClass" for="@scriptType.ToString()">@scriptType.ToString()</label>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+    <img src="/images/Icons/delete.png" style="max-height:2rem;max-width:2rem;margin-left:1rem" @onclick="ClearFilters" />
+</div>
+<script src="/js/filters.js"></script>
+
+@code {
+    [CascadingParameter]
+    public List<Bot>? Bots { get; set; }
+    [Parameter]
+    public EventCallback<List<Bot>> OnFilter { get; set; }
+    public Dictionary<string, List<string>> filters = new Dictionary<string, List<string>>();
+
+    protected async override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var filterExist = await LocalStorageService.ContainKeyAsync("BotsFilters");
+
+            if (filterExist)
+            {
+                filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("BotsFilters"))!;
+                if (filters.Count > 0)
+                {
+                    foreach (var filter in filters)
+                    {
+                        foreach (var value in filter.Value)
+                        {
+                            await JSRuntime.InvokeVoidAsync("checkboxInterop.initCheckbox", value, true);
+                        }
+                    }
+                }
+            }
+        }
+        base.OnAfterRender(firstRender);
+    }
+
+    public async void RefreshBotsWithFilters()
+    {
+        var filtersExist = await LocalStorageService.ContainKeyAsync("BotsFilters");
+        if (filtersExist)
+        {
+            filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("BotsFilters"))!;
+            Bots = await _botRepository.GetFilteredBots(filters);
+        }
+        else
+        {
+            Bots = await _botRepository.GetAll();
+        }
+        await OnFilter.InvokeAsync(Bots);
+    }
+
+    private async Task UpdateFilters()
+    {
+        filters = new Dictionary<string, List<string>>();
+        var serverFilters = new List<string>();
+        var scriptFilters = new List<string>();
+
+        foreach (var server in Enum.GetValues(typeof(ServerEnum)))
+        {
+            var isChecked = await JSRuntime.InvokeAsync<bool>("checkboxInterop.checkCheckbox", server.ToString());
+            if (isChecked && !filters.Any(m => m.Value.Contains(server.ToString())))
+            {
+                serverFilters.Add(server.ToString());
+            }
+        }
+
+        if (serverFilters.Count > 0)
+            filters.Add("Server", serverFilters);
+
+        foreach (var script in Enum.GetValues(typeof(ScriptTypeEnum)))
+        {
+            var isChecked = await JSRuntime.InvokeAsync<bool>("checkboxInterop.checkCheckbox", script.ToString());
+            if (isChecked && !filters.Any(m => m.Value.Contains(script.ToString())))
+            {
+                scriptFilters.Add(script.ToString());
+            }
+        }
+
+        if (scriptFilters.Count > 0)
+            filters.Add("Script", scriptFilters);
+
+        await LocalStorageService.SetItemAsStringAsync("BotsFilters", JsonConvert.SerializeObject(filters));
+
+        RefreshBotsWithFilters();
+    }
+
+    private async Task ClearFilters()
+    {
+        await LocalStorageService.RemoveItemAsync("BotsFilters");
+        foreach (var script in Enum.GetValues(typeof(ScriptTypeEnum)))
+        {
+            await JSRuntime.InvokeVoidAsync("checkboxInterop.clearCheckboxes", script.ToString());
+
+        }
+        foreach (var server in Enum.GetValues(typeof(ServerEnum)))
+        {
+            await JSRuntime.InvokeVoidAsync("checkboxInterop.clearCheckboxes", server.ToString());
+        }
+
+        RefreshBotsWithFilters();
+    }
+}

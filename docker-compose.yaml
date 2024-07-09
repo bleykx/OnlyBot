@@ -6,33 +6,33 @@ services:
       ACCEPT_EULA: "Y"
       SA_PASSWORD: "Boubout0!"
       MSSQL_PID: Express
+    networks:
+      - onlybot_network
     ports:
       - "1433:1433"
-  # onlybot_api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile_API
-  #   ports:
-  #     - "44320:80"
-  #     - "44321:443"
-  #   environment:
-  #     ASPNETCORE_URLS: "https://+:443;http://+:80"
-  #     ASPNETCORE_HTTPS_PORT: "44321"
-  #     ASPNETCORE_ENVIRONMENT: "Development"
-  #   volumes:
-  #     - ${APPDATA}/microsoft/UserSecrets:/root/.microsoft/usersecrets
-  #     - ${USERPROFILE}\.aspnet\https:/root/.aspnet/https
-  # onlybot_server:
-  #   build: 
-  #     context: .
-  #     dockerfile: Dockerfile_Server
-  #   ports:
-  #     - "44330:80"
-  #     - "44331:443"
-  #   environment:
-  #     ASPNETCORE_URLS: "https://+:443;http://+:80"
-  #     ASPNETCORE_HTTPS_PORT: "44331"
-  #     ASPNETCORE_ENVIRONMENT: "Development"
-  #   volumes:
-  #     - ${APPDATA}/microsoft/UserSecrets:/root/.microsoft/usersecrets
-  #     - ${USERPROFILE}\.aspnet\https:/root/.aspnet/https
+
+  onlybot_api:
+    build:
+      context: .
+      dockerfile: OnlyBot_API/Dockerfile
+    networks:
+      - onlybot_network
+    ports:
+      - "44320:80"
+      - "44321:443"
+    environment:
+      ASPNETCORE_URLS: "https://+:443;http://+:80"
+      ASPNETCORE_HTTPS_PORT: "44321"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_Kestrel__Certificates__Default__Path: "/root/.aspnet/https/OnlyBot_API.pfx"
+      ASPNETCORE_Kestrel__Certificates__Default__Password: "Boubout0!"
+    volumes:
+      - ${APPDATA}/microsoft/UserSecrets:/root/.microsoft/usersecrets
+      - ${USERPROFILE}\.aspnet\https:/root/.aspnet/https
+    depends_on:
+      - onlybot_db
+
+
+networks:
+  onlybot_network:
+    driver: bridge

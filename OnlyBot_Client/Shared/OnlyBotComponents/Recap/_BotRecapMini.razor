@@ -1,0 +1,53 @@
+﻿<div class="col">
+    <div class="card @Bg" >
+        <img src="@BreedImgPath" class="card-img-top mx-auto" alt="@((Bot != null) ? Bot.Breed.ToString() : "None")" style="max-height:67px;max-width:67px;">
+        <div class="card-body text-center">
+            @if(Bot == null)
+            {
+                <div class="card-subtitle mb-2 text-body-secondary">Unknow</div>
+                <div>No Bot loaded</div>
+            }
+            else
+            {
+                <div class="card-subtitle mb-2 text-body-secondary">@Bot.Name</div>
+                @switch (Bot.Script.Type)
+                {
+                    case ScriptTypeEnum.Bank:
+                        <div>Banker</div>
+                        break;
+                    case ScriptTypeEnum.Sell:
+                        <div>Seller</div>
+                        break;
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Bot? Bot { get; set; }
+    public string? BreedImgPath; 
+    public string? Bg;
+
+    protected override void OnInitialized()
+    {
+        if(Bot == null)
+        {
+            Bg = "bg-secondary";
+            BreedImgPath = "images/Breeds/none.png";
+        }
+        else
+        {
+            BreedImgPath = $"/images/Breeds/{Bot?.Breed}.png";
+            if(Bot!.IsConnected)
+            {
+                Bg = "bg-success";
+            }
+            else
+            {
+                Bg = "bg-danger";
+            }
+        }
+    }
+}

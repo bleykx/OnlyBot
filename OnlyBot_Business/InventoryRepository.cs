@@ -1,38 +1,18 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using OnlyBot_Business.Hubs;
 using OnlyBot_Business.IRepository;
 using OnlyBot_DataAccess;
 using OnlyBot_Models;
-using TableDependency.SqlClient;
-using TableDependency.SqlClient.Base.EventArgs;
 
 namespace OnlyBot_Business
 {
     public class InventoryRepository : IInventoryRepository
     {
-        private readonly IHubContext<InventoriesHub> _hubContext;
         private readonly ApplicationDbContext _context;
-        private readonly SqlTableDependency<Inventory> _dependency;
-        public InventoryRepository(ApplicationDbContext context, IHubContext<InventoriesHub> hubContext, IConfiguration configuration)
+
+        public InventoryRepository(ApplicationDbContext context)
         {
             _context = context;
-            _hubContext = hubContext;
-            _dependency = new SqlTableDependency<Inventory>(configuration.GetConnectionString("DefaultConnection"), "Inventories");
-            _dependency.OnChanged += Changed;
-            _dependency.Start();
-        }
-
-        private async void Changed(object sender, RecordChangedEventArgs<Inventory> e)
-        {
-            var inventories = await GetAll();
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-            await _hubContext.Clients.All.SendAsync("RefreshInventories", JsonConvert.SerializeObject(inventories, Formatting.Indented, settings));
         }
 
         public async Task<Inventory> Create(Inventory Inventory)

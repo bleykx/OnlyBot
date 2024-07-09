@@ -19,11 +19,11 @@ namespace OnlyBot_Models
         public ServerEnum Server { get; set; }
         public string? BreedImgLink { get; set; }
         public List<Inventory>? Inventories { get; set; }
-        public Script? Script { get; set; }
         public Guid? ScriptId { get; set; }
-        [Required(ErrorMessage = "Proxy is required")]
-        public Proxy? Proxy = null!;
+        public Script? Script { get; set; }
+        public Script? LastScriptLoaded { get; set; }
         public Guid? ProxyId { get; set; }
+        public Proxy? Proxy { get; set; }
         public Order? Order { get; set; }
         public Guid? OrderId { get; set; }
         public bool ScriptIsRunning { get; set; }

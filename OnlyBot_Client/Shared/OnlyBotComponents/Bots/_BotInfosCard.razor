@@ -1,0 +1,138 @@
+﻿<div class="card @CardClass" style="border-width:3px;">
+    <div class="row g-0">
+        <div class="col-4">
+            <div class="row">
+                <div class="form-check form-switch" style="margin-top:1rem;">
+                    <label class="form-check-label badge rounded-pill @Bg" for="switchConnexion">@((Bot.IsConnected) ? "Connected" : "Disconnected")</label>
+                    <input class="form-check-input custom-switch-bot-connexion" type="checkbox" id="switchConnexion" checked="@Bot.IsConnected" style="margin-left:-1rem;margin-right:0.8rem;margin-top:6px;">
+                </div>
+            </div>
+            <img src="@BreedImgPath" class="img-fluid rounded-start" alt="...">
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-8">
+                        <h1 class="card-title text-start">@Bot.Name</h1>
+                    </div>
+                    <div class="col-4">
+                        <div class="row">
+                            <h3 class="text-end fw-bold">LVL - @Bot.Level</h3>
+                        </div>
+                        <div class="row">
+                            <div class="col-10">
+                                <h5 class="text-end">
+                                    @Convert.ToDouble(Bot?.Inventories.Sum(i => i.Kamas)).ToString("N0")
+                                </h5>
+                            </div>
+                            <div class="col-2">
+                                <img src="/images/Kama.webp" style="max-width:20px;max-height:20px;margin-left:-0.8rem;margin-bottom:0.2rem" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br />
+
+
+                <p class="card-text"><small class="text-muted">Last updated 3 mins ago</small></p>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h3 class="m-3">Script</h3>
+        </div>
+        <CascadingValue Value="@Bot">
+            <CascadingValue Value="@Scripts">
+                <_ScriptSelector></_ScriptSelector>
+            </CascadingValue>
+        </CascadingValue>
+    </div>
+    <div class="container">
+        <div class="row">
+            <h3 class="m-3">Proxy</h3>
+        </div>
+        <CascadingValue Value="@Bot">
+            <CascadingValue Value="@Proxies">
+                <_ProxySelector></_ProxySelector>
+            </CascadingValue>
+        </CascadingValue>
+    </div>
+
+</div>
+
+@code {
+    [CascadingParameter]
+    public Bot Bot { get; set; } = new Bot();
+    [CascadingParameter]
+    public List<Script> Scripts { get; set; } = new();
+    [CascadingParameter]
+    public List<Proxy> Proxies { get; set; } = new();
+
+    private string? selectedScript;
+    public string? BreedImgPath;
+    public string? Bg;
+    public string? CardClass;
+    public string? SelectorClass;
+    public string? ButtonClass;
+    public string? ScriptType => Bot?.Script.Type.ToString().ToLower();
+    public string Totalkamas => Convert.ToDouble(Bot?.Inventories.Sum(i => i.Kamas)).ToString("N0");
+    public string ExperiencePercent => Bot?.ExperiencePercent.ToString() + "%" ?? "0" + "%";
+
+
+    protected override void OnInitialized()
+    {
+        if (Bot == null)
+        {
+            Bg = "text-bg-secondary";
+            BreedImgPath = "images/Breeds/none.png";
+            CardClass = "card"; // dark grey
+        }
+        else
+        {
+            BreedImgPath = $"/images/Breeds/{Bot?.Breed.ToString().ToLower()}{Bot?.Gender}Big.png";
+            if (Bot!.IsConnected)
+            {
+                Bg = "text-bg-success";
+            }
+            else
+            {
+                Bg = "text-bg-danger";
+            }
+
+            CardClass = Bot.Script != null ? "custom-card-" + Bot.Script.Type.ToString().ToLower() : "custom-card-none";
+            SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
+            ButtonClass = Bot.Script != null ? "custom-btn-" + Bot.Script.Type.ToString().ToLower() : "custom-btn-none";
+            selectedScript = Bot.Script != null ? Bot.Script.Id.ToString() : "";
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (Bot == null)
+        {
+            Bg = "text-bg-secondary";
+            BreedImgPath = "images/Breeds/none.png";
+            CardClass = "#444444"; // dark grey
+        }
+        else
+        {
+            BreedImgPath = $"/images/Breeds/{Bot?.Breed.ToString().ToLower()}{Bot?.Gender}Big.png";
+            if (Bot!.IsConnected)
+            {
+                Bg = "text-bg-success";
+            }
+            else
+            {
+                Bg = "text-bg-danger";
+            }
+
+            CardClass = Bot.Script != null ? "custom-card-" + Bot.Script.Type.ToString().ToLower() : "custom-card-none";
+            SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
+            ButtonClass = Bot.Script != null ? "custom-btn-" + Bot.Script.Type.ToString().ToLower() : "custom-btn-none";
+            selectedScript = Bot.Script != null ? Bot.Script.Id.ToString() : "";
+        }
+
+        base.OnParametersSet();
+    }
+}

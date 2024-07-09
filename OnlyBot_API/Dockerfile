@@ -1,0 +1,27 @@
+#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 443
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["OnlyBot_API/OnlyBot_API.csproj", "OnlyBot_API/"]
+COPY ["OnlyBot_Business/OnlyBot_Business.csproj", "OnlyBot_Business/"]
+COPY ["OnlyBot_DataAccess/OnlyBot_DataAccess.csproj", "OnlyBot_DataAccess/"]
+COPY ["OnlyBot_Models/OnlyBot_Models.csproj", "OnlyBot_Models/"]
+RUN dotnet restore "./OnlyBot_API/OnlyBot_API.csproj"
+COPY . .
+WORKDIR "/src/OnlyBot_API"
+RUN dotnet build "./OnlyBot_API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "./OnlyBot_API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "OnlyBot_API.dll"]

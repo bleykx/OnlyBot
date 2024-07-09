@@ -1,0 +1,86 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="row g-0">
+    <div class="col-6">
+        <select @onclick="CheckSelectedOption" @bind="@SelectedScriptId" class="form-select form-select-lg m-3 @SelectorClass" aria-label="Large select example" id="selectScripts">
+            @foreach (var script in Scripts)
+            {
+                <option  value="@script.Id">@script.Type.ToString() - @script.Name</option>
+            }
+        </select>
+        <div class="row m-3">
+            <div class="col-4">
+                @if (Bot.Script != SelectedScript)
+                {
+                    <button class="btn btn-custom" style="width:100%;">Load Script</button>
+                }
+                else
+                {
+                    <button class="btn btn-custom" style="width:100%;">Reload Script</button>
+                }
+            </div>
+            @if (Bot.ScriptIsRunning)
+            {
+                <div class="col-4">
+                    <button class="btn btn-custom-danger" style="width:100%;">Stop Script</button>
+                </div>
+            }
+            else
+            {
+                <div class="col-4">
+                    <button class="btn btn-custom-success" style="width:100%;">Start Script</button>
+                </div>
+            }
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="container m-3" style="padding-top: 0.25rem;padding-bottom: 0.5rem;padding-left: 1rem;font-size: 1.25rem;">
+            <CascadingValue Value="@Scripts">
+                <_ScriptMenu OnFilter="GetFilteredScripts"></_ScriptMenu>
+            </CascadingValue>
+        </div>
+    </div>
+</div>
+@code {
+    [CascadingParameter]
+    public Bot Bot { get; set; } = new Bot();
+    [CascadingParameter]
+    public List<Script> Scripts { get; set; } = new List<Script>();
+    private Script SelectedScript;
+    private string SelectedScriptId;
+    public string? SelectorClass;
+    private string selectedOption;
+
+    protected override void OnInitialized()
+    {
+        SelectedScript = Bot.Script != null ? Bot.Script : null;
+        SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
+        SelectedScriptId = SelectedScript.Name;
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        SelectedScript = Bot.Script != null ? Bot.Script : null;
+        SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
+        SelectedScriptId = SelectedScript.Id.ToString();
+
+        base.OnParametersSet();
+    }
+
+    private async void GetFilteredScripts(List<Script> scripts)
+    {
+        Scripts = scripts;
+        SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CheckSelectedOption()
+    {
+        selectedOption = await JSRuntime.InvokeAsync<string>("selectInterop.getSelectedOption", "selectScripts");
+        SelectedScript = Scripts.FirstOrDefault(m => m.Id == new Guid(selectedOption));
+        SelectorClass = SelectedScript != null ? "form-select-custom-" + SelectedScript.Type.ToString().ToLower() : "form-select-custom-none";
+        await InvokeAsync(StateHasChanged);
+    }
+}

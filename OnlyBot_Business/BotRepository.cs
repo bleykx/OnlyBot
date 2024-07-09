@@ -1,45 +1,24 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using OnlyBot_Business.Hubs;
 using OnlyBot_Business.IRepository;
 using OnlyBot_DataAccess;
 using OnlyBot_Models;
 using OnlyBot_Models.Enums;
-using TableDependency.SqlClient;
-using TableDependency.SqlClient.Base.EventArgs;
 
 namespace OnlyBot_Business
 {
     public class BotRepository : IBotRepository
     {
-        private readonly IHubContext<BotsHub> _hubContext;
         private readonly ApplicationDbContext _context;
-        private readonly SqlTableDependency<Bot> _dependency;
 
-        public BotRepository(ApplicationDbContext context, IHubContext<BotsHub> hubContext, IConfiguration configuration)
+        public BotRepository(ApplicationDbContext context)
         {
             _context = context;
-            _hubContext = hubContext;
-            _dependency = new SqlTableDependency<Bot>(configuration.GetConnectionString("DefaultConnection"), "Bots");
-            _dependency.OnChanged += Changed;
-            _dependency.Start();
-        }
-
-        private async void Changed(object sender, RecordChangedEventArgs<Bot> e)
-        {
-            var bots = await GetAll();
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-            await _hubContext.Clients.All.SendAsync("RefreshBots", JsonConvert.SerializeObject(bots, Formatting.Indented, settings));
         }
 
         public async Task<Bot> Create(Bot bot)
         {
-            bot.ScriptId = bot.Script != null ? bot.Script.Id :  null;
+            bot.ScriptId = bot.Script != null ? bot.Script.Id : null;
             bot.Script = null;
             bot.ProxyId = bot.Proxy != null ? bot.Proxy.Id : null;
             bot.Proxy = null;
@@ -67,10 +46,10 @@ namespace OnlyBot_Business
         public async Task<Bot> Get(Guid botId)
         {
             var bot = await _context.Bots
-                .AsNoTracking()
                 .Include(b => b.Script)
                 .Include(b => b.Inventories)
                 .ThenInclude(i => i.Items)
+                .Include(p => p.Proxy)
                 .FirstOrDefaultAsync(b => b.Id == botId);
 
             if (bot != null)
@@ -81,22 +60,14 @@ namespace OnlyBot_Business
             return new Bot();
         }
 
-
-        public async Task<List<Bot>> GetAllBots()
-        {
-            return await _context.Bots
-                .AsNoTracking()
-                .Include(b => b.Script)
-                .Include(b => b.Inventories)
-                .ToListAsync();
-        }
-
         public async Task<List<Bot>> GetAll()
         {
             var bots = await _context.Bots
                 .AsNoTracking()
                 .Include(b => b.Script)
                 .Include(b => b.Inventories)
+                .ThenInclude(i => i.Items)
+                .Include(p => p.Proxy)
                 .ToListAsync();
 
             return bots;
@@ -130,6 +101,7 @@ namespace OnlyBot_Business
                 botFromDb.Breed = Bot.Breed;
                 botFromDb.BreedImgLink = Bot.BreedImgLink;
                 botFromDb.Script = Bot.Script;
+                botFromDb.LastScriptLoaded = Bot.LastScriptLoaded;
                 botFromDb.ScriptIsRunning = Bot.ScriptIsRunning;
                 botFromDb.IsConnected = Bot.IsConnected;
                 botFromDb.Level = Bot.Level;
@@ -152,7 +124,7 @@ namespace OnlyBot_Business
 
         public async Task<List<Bot>> GetFilteredBots(Dictionary<string, List<string>> filters)
         {
-            var bots = await GetAllBots();
+            var bots = await GetAll();
 
             if (filters.Count == 0)
             {

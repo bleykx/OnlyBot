@@ -19,7 +19,7 @@ namespace OnlyBot_Models
         public bool IsBanned { get; set; }
         [Required(ErrorMessage = "Please enter an Expiration Date..")]
         public DateTime? PlanExpirationDate { get; set; }
-        public List<Bot>? Bots { get; set; }
+        public List<Bot> Bots { get; set; }
         public string? Provider { get; set; }
     }
 }

@@ -1,0 +1,523 @@
+﻿@import "bootstrap/scss/bootstrap";
+
+$primary-color: #9932cc;
+$success-color: #008000;
+$danger-color: #a40000;
+$bank-color: #FFD700;
+$seller-color: #00a1ff;
+$gather-color: #01d758;
+$fight-color: #e0115f;
+$craft-color: #811453;
+$exchange-color: #7293a8;
+$regen-color: #FF1493;
+$buy-color: #FF4500;
+$misc-color: #44A8FF;
+$path-color: #0D6300;
+$undefined-color: #9e9e9e;
+$none-color: #393939;
+
+.form-select-custom-bank {
+    border-color: $bank-color;
+}
+
+.form-select-custom-sell {
+    border-color: $seller-color;
+}
+
+.form-select-custom-gather {
+    border-color: $gather-color;
+}
+
+.form-select-custom-fight {
+    border-color: $fight-color;
+}
+
+.form-select-custom-craft {
+    border-color: $craft-color;
+}
+
+.form-select-custom-exchange {
+    border-color: $exchange-color;
+}
+
+.form-select-custom-regen {
+    border-color: $regen-color;
+}
+
+.form-select-custom-buy {
+    border-color: $buy-color;
+}
+
+.form-select-custom-misc {
+    border-color: $misc-color;
+}
+
+.form-select-custom-path {
+    border-color: $path-color;
+}
+
+.form-select-custom-undefined {
+    border-color: $undefined-color;
+}
+
+.form-select-custom-none {
+    border-color: $none-color;
+}
+
+.btn-custom {
+    @include button-variant(darkslateblue, white, $primary-color, $primary-color);
+    color: white;
+}
+
+.btn-custom-danger {
+    @include button-variant($danger-color, white, $danger-color, $danger-color);
+    color: white;
+}
+
+.btn-custom-success {
+    @include button-variant($success-color, white, $success-color, $success-color);
+    color: white;
+}
+
+.btn-custom-filter.show .btn-custom-filter:focus, .btn-custom-filter:hover, btn-custom-filter:active {
+    background: $primary-color !important;
+}
+
+.custom-btn-bank {
+    @include button-variant($bank-color, black, $bank-color, $bank-color);
+    color: black;
+}
+
+.custom-btn-sell {
+    @include button-variant($seller-color, black, $seller-color, $seller-color);
+    color: black;
+}
+
+.custom-btn-gather {
+    @include button-variant($gather-color, black, $gather-color, $gather-color);
+    color: black;
+}
+
+.custom-btn-fight {
+    @include button-variant($fight-color, black, $fight-color, $fight-color);
+    color: black;
+}
+
+.custom-btn-craft {
+    @include button-variant($craft-color, black, $craft-color, $craft-color);
+    color: black;
+}
+
+.custom-btn-exchange {
+    @include button-variant($exchange-color, black, $exchange-color, $exchange-color);
+    color: black;
+}
+
+.custom-btn-regen {
+    @include button-variant($regen-color, black, $regen-color, $regen-color);
+    color: black;
+}
+
+.custom-btn-buy {
+    @include button-variant($buy-color, black, $buy-color, $buy-color);
+    color: black;
+}
+
+.custom-btn-misc {
+    @include button-variant($misc-color, black, $misc-color, $misc-color);
+    color: black;
+}
+
+.custom-btn-path {
+    @include button-variant($path-color, black, $path-color, $path-color);
+    color: black;
+}
+
+.custom-btn-undefined {
+    @include button-variant($undefined-color, black, $undefined-color, $undefined-color);
+    color: black;
+}
+
+.custom-btn-none {
+    @include button-variant($none-color, black, $none-color, $none-color);
+    color: black;
+}
+
+.btn-outline-custom-filter {
+    @include button-outline-variant($primary-color, #222222, lighten($primary-color,5%), $primary-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-bank {
+    @include button-outline-variant($bank-color, #222222, lighten($bank-color,5%), $bank-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-sell {
+    @include button-outline-variant($seller-color, #222222, lighten($seller-color,5%), $seller-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-gather {
+    @include button-outline-variant($gather-color, #222222, lighten($gather-color,5%), $gather-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-fight {
+    @include button-outline-variant($fight-color, #222222, lighten($fight-color,5%), $fight-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-craft {
+    @include button-outline-variant($craft-color, #222222, lighten($craft-color,5%), $craft-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-exchange {
+    @include button-outline-variant($exchange-color, #222222, lighten($exchange-color,5%), $exchange-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-regen {
+    @include button-outline-variant($regen-color, #222222, lighten($regen-color,5%), $regen-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-buy {
+    @include button-outline-variant($buy-color, #222222, lighten($buy-color,5%), $buy-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-misc {
+    @include button-outline-variant($misc-color, #222222, lighten($misc-color,5%), $misc-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-path {
+    @include button-outline-variant($path-color, #222222, lighten($path-color,5%), $path-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-undefined {
+    @include button-outline-variant($undefined-color, #222222, lighten($undefined-color,5%), $undefined-color);
+    height: 100%;
+    width: 100%;
+}
+
+.btn-outline-custom-none {
+    @include button-outline-variant($none-color, #222222, lighten($none-color,5%), $none-color);
+    height: 100%;
+    width: 100%;
+}
+
+.custom-filter-dropdown {
+    background-color: darkslateblue;
+}
+
+.custom-filter-dropdown:focus {
+    background-color: $primary-color;
+}
+
+.custom-filter-dropdown:hover {
+    background-color: $primary-color;
+}
+
+.custom-filter-dropdown:active {
+    background-color: $primary-color;
+}
+
+.custom-filter-dropdown.show {
+    background: $primary-color;
+}
+
+.custom-filter-checkbox-outline {
+    background-color: transparent;
+    border-color: $primary-color;
+    outline-color: $primary-color;
+    color: white;
+    height: 100%;
+    width: 100%;
+}
+
+.custom-filter-checkbox-outline:active {
+    background-color: $primary-color;
+    outline-color: red !important;
+    border-color: green;
+}
+
+
+.custom-dropdown-item {
+    background-color: transparent;
+}
+
+.custom-dropdown-item:hover {
+    background-color: transparent;
+}
+
+.custom-dropdown-item:active {
+    background-color: transparent;
+}
+
+
+.custom-switch-bot-connexion {
+    background-color: #c6303e
+}
+
+.custom-switch-bot-connexion:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-bot-connexion:checked {
+    background-color: #13795b;
+    border-color: #13795b;
+    border: none;
+}
+
+
+.custom-switch-sell {
+}
+
+.custom-switch-sell:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-sell:checked {
+    background-color: $seller-color;
+    border-color: $seller-color;
+    border: none;
+}
+
+.custom-switch-bank {
+}
+
+.custom-switch-bank:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-bank:checked {
+    background-color: $bank-color;
+    border-color: $bank-color;
+    border: none;
+}
+
+.custom-switch-fight {
+}
+
+.custom-switch-fight:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-fight:checked {
+    background-color: $fight-color;
+    border-color: $fight-color;
+    border: none;
+}
+
+.custom-switch-exchange {
+}
+
+.custom-switch-exchange:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-exchange:checked {
+    background-color: $exchange-color;
+    border-color: $exchange-color;
+    border: none;
+}
+
+.custom-switch-regen {
+}
+
+.custom-switch-regen:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-regen:checked {
+    background-color: $regen-color;
+    border-color: $regen-color;
+    border: none;
+}
+
+.custom-switch-buy {
+}
+
+.custom-switch-buy:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-buy:checked {
+    background-color: $buy-color;
+    border-color: $buy-color;
+    border: none;
+}
+
+.custom-switch-gather {
+}
+
+.custom-switch-gather:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-gather:checked {
+    background-color: $gather-color;
+    border-color: $gather-color;
+    border: none;
+}
+
+.custom-switch-craft {
+}
+
+.custom-switch-craft:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-craft:checked {
+    background-color: $craft-color;
+    border-color: $craft-color;
+    border: none;
+}
+
+.custom-switch-misc {
+}
+
+.custom-switch-misc:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-misc:checked {
+    background-color: $misc-color;
+    border-color: $misc-color;
+    border: none;
+}
+
+.custom-switch-path {
+}
+
+.custom-switch-path:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-path:checked {
+    background-color: $path-color;
+    border-color: $path-color;
+    border: none;
+}
+
+.custom-switch-undefined {
+}
+
+.custom-switch-undefined:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+}
+
+.custom-switch-undefined:focus {
+    background-color: $undefined-color;
+    border-color: $undefined-color;
+    border: none;
+}
+
+.custom-switch-undefined:checked {
+    background-color: $undefined-color;
+    border-color: $undefined-color;
+    border: none;
+}
+
+.custom-switch-none {
+}
+
+.custom-switch-none:focus {
+    border-color: rgba(0, 0, 0, 0.25);
+    outline: 0;
+    box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+
+}
+
+.custom-switch-none:checked {
+    background-color: $none-color;
+    border-color: $none-color;
+    border: none;
+}
+
+.custom-card-bank {
+    border-color: $bank-color;
+}
+
+.custom-card-sell {
+    border-color: $seller-color;
+}
+
+.custom-card-gather {
+    border-color: $gather-color;
+}
+
+.custom-card-fight {
+    border-color: $fight-color;
+}
+
+.custom-card-craft {
+    border-color: $craft-color;
+}
+
+.custom-card-exchange {
+    border-color: $exchange-color;
+}
+
+.custom-card-regen {
+    border-color: $regen-color;
+}
+
+.custom-card-buy {
+    border-color: $buy-color;
+}
+
+.custom-card-misc {
+    border-color: $misc-color;
+}
+
+.custom-card-path {
+    border-color: $path-color;
+}
+
+.custom-card-undefined {
+    border-color: $undefined-color;
+}
+
+.custom-card-none {
+    border-color: $none-color;
+}

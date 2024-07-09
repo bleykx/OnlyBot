@@ -1,0 +1,144 @@
+﻿@page "/allBots"
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorageService
+@inject IBotService _botService
+@inject IInventoryService _inventoryService
+@inject IScriptService _scriptService
+@inject IProxyService _proxyService
+@implements IAsyncDisposable
+@inject NavigationManager Navigation
+
+<PageTitle>Bots</PageTitle>
+
+@if (IsProcessing)
+{
+    <div class="d-flex justify-content-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else
+{
+    <div class="col-12 text-center">
+        <h1>Bots</h1>
+        <br />
+        <br />
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <CascadingValue Value="@Bots">
+                <_BotsFilters OnFilter="GetFilteredBots"></_BotsFilters>
+            </CascadingValue>
+        </div>
+        <div class="col-6">
+            <div class="float-end" style="margin-right:2.5rem">
+                <_AddBot></_AddBot>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <CascadingValue Value="@Bots">
+            <_BotsGrid></_BotsGrid>
+        </CascadingValue>
+    </div>
+}
+
+@code {
+    public bool IsProcessing { get; set; } = false;
+    public List<Bot> Bots { get; set; } = new List<Bot>();
+    public List<Inventory> Inventories { get; set; } = new List<Inventory>();
+    private HubConnection? botsHubConnection;
+    private HubConnection? inventoriesHubConnection;
+    public Dictionary<string, List<string>> filters = new Dictionary<string, List<string>>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            IsProcessing = true;
+            var filtersExist = await LocalStorageService.ContainKeyAsync("Filters");
+            if (filtersExist)
+            {
+                filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("Filters"))!;
+                Bots = await _botService.GetFilteredBots(filters);
+            }
+            else
+            {
+                Bots = await _botService.GetAll();
+            }
+            Inventories = Bots.SelectMany(m => m.Inventories).ToList();
+            IsProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        botsHubConnection = new HubConnectionBuilder()
+            // .WithUrl("https://localhost:44321/botshub")
+            .WithUrl("https://localhost:7007/botshub")
+            .Build();
+
+        botsHubConnection.On<string>("RefreshBots", bots =>
+        {
+            if (bots != null)
+                Bots = JsonConvert.DeserializeObject<List<Bot>>(bots)!;
+            else
+                Bots = new List<Bot>();
+            InvokeAsync(StateHasChanged);
+        });
+
+        inventoriesHubConnection = new HubConnectionBuilder()
+            // .WithUrl("https://localhost:44321/inventorieshub")
+            .WithUrl("https://localhost:7007/inventorieshub")
+            .Build();
+
+        inventoriesHubConnection.On<string>("RefreshInventories", inventories =>
+        {
+            if (inventories != null)
+            {
+                var inventoriesList = JsonConvert.DeserializeObject<List<Inventory>>(inventories)!;
+                foreach (var inventory in inventoriesList)
+                {
+                    var bot = Bots.FirstOrDefault(m => m.Id == inventory.BotId);
+                    if (bot != null)
+                    {
+                        var botInventory = bot.Inventories.FirstOrDefault(m => m.Id == inventory.Id);
+                        if (botInventory != null)
+                        {
+                            botInventory.Kamas = inventory.Kamas;
+                            botInventory.Items = inventory.Items;
+                        }
+                        else
+                        {
+                            bot.Inventories.Add(inventory);
+                        }
+                    }
+                }
+            }
+            InvokeAsync(StateHasChanged);
+        });
+
+        await inventoriesHubConnection.StartAsync();
+        await botsHubConnection.StartAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (botsHubConnection is not null)
+        {
+            await botsHubConnection.DisposeAsync();
+        }
+        if (inventoriesHubConnection is not null)
+        {
+            await inventoriesHubConnection.DisposeAsync();
+        }
+    }
+
+    private async void GetFilteredBots(List<Bot> bots)
+    {
+        Bots = bots;
+        await InvokeAsync(StateHasChanged);
+    }
+}

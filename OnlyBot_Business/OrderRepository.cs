@@ -13,26 +13,12 @@ namespace OnlyBot_Business
 {
     public class OrderRepository : IOrderRepository
     {
-        private readonly IHubContext<OrdersHub> _hubContext;
         private readonly ApplicationDbContext _context;
-        private readonly SqlTableDependency<Order> _dependency;
-        public OrderRepository(ApplicationDbContext context, IHubContext<OrdersHub> hubContext, IConfiguration configuration)
+
+        public OrderRepository(ApplicationDbContext context)
         {
             _context = context;
-            _hubContext = hubContext;
-            _dependency = new SqlTableDependency<Order>(configuration.GetConnectionString("DefaultConnection"), "Order");
-            _dependency.OnChanged += Changed;
-            _dependency.Start();
-        }
 
-        private async void Changed(object sender, RecordChangedEventArgs<Order> e)
-        {
-            var orders = await GetAll();
-            var settings = new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-            await _hubContext.Clients.All.SendAsync("RefreshOrders", JsonConvert.SerializeObject(orders, Formatting.Indented, settings));
         }
 
         public async Task<Order> Create(Order order)

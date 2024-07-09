@@ -1,0 +1,83 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="row g-0">
+    <div class="col-6">
+        <select @onclick="CheckSelectedOption" @bind="@SelectedProxyId" class="form-select form-select-lg m-3 @SelectorClass" aria-label="Large select example" id="selectProxies">
+            @foreach (var proxy in Proxies)
+            {
+                <option value="@proxy.Id">@proxy.Name</option>
+            }
+        </select>
+        <div class="row m-3">
+            <div class="col-4">
+                @if (Bot.Proxy != SelectedProxy)
+                {
+                    <button class="btn btn-custom" style="width:100%;">Load Proxy</button>
+                }
+                else
+                {
+                    <button class="btn btn-custom" style="width:100%;">Reload Proxy</button>
+                }
+            </div>
+            @if (Bot.ScriptIsRunning)
+            {
+                <div class="col-4">
+                    <button class="btn btn-custom-danger" style="width:100%;">Stop Proxy</button>
+                </div>
+            }
+            else
+            {
+                <div class="col-4">
+                    <button class="btn btn-custom-success" style="width:100%;">Start Proxy</button>
+                </div>
+            }
+        </div>
+    </div>
+@*     <div class="col-6">
+        <div class="container m-3" style="padding-top: 0.25rem;padding-bottom: 0.5rem;padding-left: 1rem;font-size: 1.25rem;">
+            <CascadingValue Value="@Proxies">
+                <_ProxiesFilters OnFilter="GetFilteredProxies"></_ProxiesFilters>
+            </CascadingValue>
+        </div>
+    </div> *@
+</div>
+@code {
+    [CascadingParameter]
+    public Bot Bot { get; set; } = new();
+    [CascadingParameter]
+    public List<Proxy> Proxies { get; set; } = new();
+    private Proxy SelectedProxy;
+    private string SelectedProxyId;
+    public string? SelectorClass;
+    private string selectedOption;
+
+    protected override void OnInitialized()
+    {
+        SelectedProxy = Bot.Proxy != null ? Bot.Proxy : new();
+        SelectedProxyId = SelectedProxy.Id.ToString();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    protected override void OnParametersSet()
+    {
+        SelectedProxy = Bot.Proxy != null ? Bot.Proxy : new();
+        SelectedProxyId = SelectedProxy.Id.ToString();
+
+        base.OnParametersSet();
+    }
+
+    private async void GetFilteredProxies(List<Proxy> proxies)
+    {
+        Proxies = proxies;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task CheckSelectedOption()
+    {
+        selectedOption = await JSRuntime.InvokeAsync<string>("selectInterop.getSelectedOption", "selectProxies");
+        SelectedProxy = Proxies.FirstOrDefault(m => m.Id == new Guid(selectedOption));
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

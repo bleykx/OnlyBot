@@ -1,0 +1,145 @@
+﻿@inject IScriptRepository _scriptRepository
+@inject IProxyRepository _proxyRepository
+@inject IBotRepository _botRepository
+
+<button type="button" class="btn btn-custom-success" data-bs-toggle="modal" data-bs-target="#staticBackdrop" @onclick="ResetData">
+    Add Bot
+</button>
+
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Add Bot</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="card">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <img src="@BreedImgPath" class="img-fluid rounded-start" alt="...">
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <EditForm Model="Bot" OnValidSubmit="AddBot">
+                                    <DataAnnotationsValidator />
+                                    <div class="form-group">
+                                        <label for="accountName">Account name</label>
+                                        <InputText class="form-control" id="accountName" @bind-Value="Bot.AccountName" @onfocusout="FormValidation" />
+                                        <ValidationMessage For="@(() => Bot.AccountName)" />
+                                        <label for="password">Password</label>
+                                        <InputText class="form-control" id="password" @bind-Value="Bot.Password" @onfocusout="FormValidation" />
+                                        <ValidationMessage For="@(() => Bot.Password)" />
+                                        <label for="Description">Description</label>
+                                        <InputText class="form-control" id="Description" @bind-Value="Bot.Description" />
+                                        <label for="Proxy">Proxy</label>
+                                        <InputSelect class="form-select" @bind-Value="SelectedProxy" @onfocusout="FormValidation">
+                                            <option value="" selected disabled hidden>Choose here</option>
+                                            @foreach (var proxy in Proxies)
+                                            {
+                                                <option value="@proxy.Name">@proxy.Name</option>
+                                            }
+                                        </InputSelect>
+                                        <ValidationMessage For="@(() => Bot.Proxy)" />
+
+                                        <label for="Script">Script</label>
+                                        <InputSelect class="form-select" @bind-Value="SelectedScript">
+                                            <option value="" selected disabled hidden>Choose here</option>
+                                            @foreach (var script in Scripts)
+                                            {
+                                                <option value="@script.Name">@script.Name</option>
+                                            }
+                                        </InputSelect>
+
+                                        <br />
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input custom-switch-bot-connexion" @bind="IsCreateBot" type="checkbox" role="switch" id="flexSwitchCheckDefault">
+                                            <label class="form-check-label" for="flexSwitchCheckDefault">Create Bot</label>
+                                        </div>
+                                        <label for="botName" hidden="@(!IsCreateBot)">Bot name</label>
+                                        <InputText class="form-control" id="botName" @bind-Value="Bot.Name" hidden="@(!IsCreateBot)" />
+                                        <label for="breed" hidden="@(!IsCreateBot)">Breed</label>
+                                        <InputSelect class="form-select" @bind-Value="Bot.Breed" hidden="@(!IsCreateBot)">
+                                            @foreach (var breed in Enum.GetValues(typeof(BreedEnum)))
+                                            {
+                                                <option value="@breed">@breed</option>
+                                            }
+                                        </InputSelect>
+                                        <label for="server" hidden="@(!IsCreateBot)">Server</label>
+                                        <InputSelect class="form-select" @bind-Value="Bot.Server" hidden="@(!IsCreateBot)">
+                                            @foreach (var server in Enum.GetValues(typeof(ServerEnum)))
+                                            {
+                                                <option value="@server">@server</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button class="btn btn-custom-success" data-bs-dismiss="modal" disabled="@(!FormIsValid)">Add</button>
+                                        <button type="button" class="btn btn-custom-danger" data-bs-dismiss="modal">Cancel</button>
+                                    </div>
+                                </EditForm>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    public Bot Bot { get; set; } = new Bot();
+    [CascadingParameter]
+    public List<Script> Scripts { get; set; } = new List<Script>();
+    public string? SelectedScript { get; set; }
+    [CascadingParameter]
+    public List<Proxy> Proxies { get; set; } = new List<Proxy>();
+    public string? SelectedProxy { get; set; }
+    public string? BreedImgPath;
+    public bool IsCreateBot { get; set; } = false;
+    public bool FormIsValid { get; set; } = false;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Bot = new Bot()
+            {
+                Breed = BreedEnum.Eniripsa,
+                Gender = "Female"
+            };
+        BreedImgPath = $"/images/Breeds/{Bot?.Breed}{Bot?.Gender}Big.png";
+
+        Scripts = await _scriptRepository.GetAll();
+        Proxies = await _proxyRepository.GetAll();
+        base.OnInitialized();
+    }
+
+    public void ResetData()
+    {
+        Bot = new Bot()
+            {
+                Breed = BreedEnum.Eniripsa,
+                Gender = "Female"
+            };
+        BreedImgPath = $"/images/Breeds/{Bot?.Breed}{Bot?.Gender}Big.png";
+        SelectedProxy = null;
+        SelectedScript = null;
+        FormIsValid = false;
+    }
+
+    public void FormValidation()
+    {
+        FormIsValid = !String.IsNullOrEmpty(Bot.AccountName) && !String.IsNullOrEmpty(Bot.Password) && !String.IsNullOrEmpty(SelectedProxy);
+    }
+
+    public async void AddBot()
+    {
+        if (!String.IsNullOrEmpty(SelectedScript))
+            Bot.Script = Scripts.First(m => m.Name == SelectedScript);
+        
+        Bot.Proxy = Proxies.First(m => m.Name == SelectedProxy);
+
+        await _botRepository.Create(Bot);
+    }
+}
