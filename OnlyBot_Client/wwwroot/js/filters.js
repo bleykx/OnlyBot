@@ -64,5 +64,11 @@ window.searchInterop = {
         } else {
             console.error("Bloodhound is not defined.");
         }
+    },
+
+    updateTypeaheadList: function (inputId, scriptNames) {
+        console.log("Updating Typeahead...");
+        $('#' + inputId).typeahead('destroy');
+        window.searchInterop.initializeTypeaheadForScripts(inputId, scriptNames);
     }
 }
