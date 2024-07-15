@@ -2,7 +2,7 @@
 
 <div class="row g-0">
     <div class="col-6">
-        <select @onclick="CheckSelectedOption" @bind="@SelectedProxyId" class="form-select form-select-lg m-3 @SelectorClass" aria-label="Large select example" id="selectProxies">
+        <select @onclick="CheckSelectedOption" @bind="@SelectedProxyId" class="form-select form-select-lg m-3" aria-label="Large select example" id="selectProxies">
             @foreach (var proxy in Proxies)
             {
                 <option value="@proxy.Id">@proxy.Name</option>
@@ -10,36 +10,24 @@
         </select>
         <div class="row m-3">
             <div class="col-4">
-                @if (Bot.Proxy != SelectedProxy)
+                @if (Bot.Proxy.Id != SelectedProxy.Id)
                 {
-                    <button class="btn btn-custom" style="width:100%;">Load Proxy</button>
+                    <button class="btn btn-custom" style="width:100%;">Change Proxy</button>
                 }
                 else
                 {
-                    <button class="btn btn-custom" style="width:100%;">Reload Proxy</button>
+                    <button class="btn btn-custom" style="width:100%;" disabled>Change Proxy</button>
                 }
             </div>
-            @if (Bot.ScriptIsRunning)
-            {
-                <div class="col-4">
-                    <button class="btn btn-custom-danger" style="width:100%;">Stop Proxy</button>
-                </div>
-            }
-            else
-            {
-                <div class="col-4">
-                    <button class="btn btn-custom-success" style="width:100%;">Start Proxy</button>
-                </div>
-            }
         </div>
     </div>
-@*     <div class="col-6">
+    <div class="col-6">
         <div class="container m-3" style="padding-top: 0.25rem;padding-bottom: 0.5rem;padding-left: 1rem;font-size: 1.25rem;">
             <CascadingValue Value="@Proxies">
-                <_ProxiesFilters OnFilter="GetFilteredProxies"></_ProxiesFilters>
+                <_ProxySearchBar OnSelectProxy="HandleProxySelection" />
             </CascadingValue>
         </div>
-    </div> *@
+    </div>
 </div>
 @code {
     [CascadingParameter]
@@ -48,7 +36,6 @@
     public List<Proxy> Proxies { get; set; } = new();
     private Proxy SelectedProxy;
     private string SelectedProxyId;
-    public string? SelectorClass;
     private string selectedOption;
 
     protected override void OnInitialized()
@@ -78,6 +65,14 @@
         selectedOption = await JSRuntime.InvokeAsync<string>("selectInterop.getSelectedOption", "selectProxies");
         SelectedProxy = Proxies.FirstOrDefault(m => m.Id == new Guid(selectedOption));
 
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleProxySelection(Proxy proxy)
+    {
+        selectedOption = new Guid(proxy.Id.ToString()).ToString();
+        SelectedProxy = proxy;
+        SelectedProxyId = proxy.Id.ToString();
         await InvokeAsync(StateHasChanged);
     }
 }

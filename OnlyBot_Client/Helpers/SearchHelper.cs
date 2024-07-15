@@ -1,14 +1,14 @@
 ﻿using Microsoft.JSInterop;
-using OnlyBot_Client.Shared.OnlyBotComponents.Menus;
+using OnlyBot_Client.Shared.OnlyBotComponents.Scripts;
 
 namespace OnlyBot_Client.Helpers
 {
     public static class SearchHelper
     {
-        [JSInvokable]
+        [JSInvokable("UpdateSearchQuery")]
         public static void UpdateSearchQuery(string query)
         {
-            _ScriptMenu.Instance.UpdateSearchQuery(query);
+            //_ScriptSearchBar.Instance.UpdateSearchQuery(query);
         }
     }
 }

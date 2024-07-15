@@ -125,3 +125,7 @@ code {
     .tt-suggestion p {
         margin: 0; /* Supprimez la marge pour les paragraphes */
     }
+
+.tt-highlight {
+    color: aquamarine;
+}

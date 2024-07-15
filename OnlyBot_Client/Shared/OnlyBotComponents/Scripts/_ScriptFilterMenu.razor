@@ -1,0 +1,105 @@
+﻿@inject IJSRuntime JSRuntime
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorageService
+@inject IScriptService _scriptService
+
+<div class="btn-group" role="group" aria-label="Button group with nested dropdown">
+    <div class="btn-group" role="group" id="scriptFilter">
+        <button type="button" class="btn btn-custom dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+            Script Type
+        </button>
+        <ul class="dropdown-menu">
+            @foreach (var scriptType in Enum.GetValues(typeof(ScriptTypeEnum)))
+            {
+                var btnClass = "btn-outline-custom-" + scriptType.ToString().ToLower();
+                <li>
+                    <a class="dropdown-item">
+                        <input type="checkbox" class="btn-check" id="@scriptType.ToString()" autocomplete="off" @onchange="UpdateFiltersType">
+                        <label class="btn @btnClass" for="@scriptType.ToString()">@scriptType.ToString()</label>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+    <img src="/images/Icons/delete.png" class="" style="max-height:2rem;max-width:2rem;margin-left:1rem" @onclick="DeleteFiltersType" />
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<List<Script>> OnFilter { get; set; }
+
+    public Dictionary<string, List<string>> filters = new Dictionary<string, List<string>>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var filterExist = await LocalStorageService.ContainKeyAsync("ScriptsFilters");
+
+            if (filterExist)
+            {
+                filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("ScriptsFilters"))!;
+                if (filters.Count > 0)
+                {
+                    foreach (var filter in filters)
+                    {
+                        foreach (var value in filter.Value)
+                        {
+                            await JSRuntime.InvokeVoidAsync("checkboxInterop.initCheckbox", value, true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private async Task UpdateFiltersType()
+    {
+        filters = new Dictionary<string, List<string>>();
+        var scriptFilters = new List<string>();
+
+        foreach (var script in Enum.GetValues(typeof(ScriptTypeEnum)))
+        {
+            var isChecked = await JSRuntime.InvokeAsync<bool>("checkboxInterop.checkCheckbox", script.ToString());
+            if (isChecked && !filters.Any(m => m.Value.Contains(script.ToString())))
+            {
+                scriptFilters.Add(script.ToString());
+            }
+        }
+
+        if (scriptFilters.Count > 0)
+            filters.Add("Type", scriptFilters);
+
+        await LocalStorageService.SetItemAsStringAsync("ScriptsFilters", JsonConvert.SerializeObject(filters));
+
+        await RefreshScriptsWithFilters();
+    }
+
+    private async Task DeleteFiltersType()
+    {
+        filters = new Dictionary<string, List<string>>();
+        await LocalStorageService.SetItemAsStringAsync("ScriptsFilters", JsonConvert.SerializeObject(filters));
+        foreach (var scriptType in Enum.GetValues(typeof(ScriptTypeEnum)))
+        {
+            await JSRuntime.InvokeVoidAsync("checkboxInterop.clearCheckboxes", scriptType.ToString());
+        }
+        await RefreshScriptsWithFilters();
+    }
+
+    public async Task RefreshScriptsWithFilters()
+    {
+        var filtersExist = await LocalStorageService.ContainKeyAsync("ScriptsFilters");
+        List<Script> scripts;
+        if (filtersExist)
+        {
+            filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("ScriptsFilters"))!;
+            scripts = await _scriptService.GetFilteredScripts(filters);
+            await OnFilter.InvokeAsync(scripts);
+        }
+        else
+        {
+            scripts = await _scriptService.GetAll();
+        }
+        await JSRuntime.InvokeVoidAsync("searchInterop.updateTypeaheadList", "searchInput", scripts.Select(s => s.Name).ToList());
+    }
+}
+

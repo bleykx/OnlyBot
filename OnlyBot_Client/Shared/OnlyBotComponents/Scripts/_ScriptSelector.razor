@@ -5,12 +5,12 @@
         <select @onclick="CheckSelectedOption" @bind="@SelectedScriptId" class="form-select form-select-lg m-3 @SelectorClass" aria-label="Large select example" id="selectScripts">
             @foreach (var script in Scripts)
             {
-                <option  value="@script.Id">@script.Type.ToString() - @script.Name</option>
+                <option value="@script.Id">@script.Type.ToString() - @script.Name</option>
             }
         </select>
         <div class="row m-3">
             <div class="col-4">
-                @if (Bot.Script != SelectedScript)
+                @if (Bot.Script.Id != SelectedScript.Id)
                 {
                     <button class="btn btn-custom" style="width:100%;">Load Script</button>
                 }
@@ -36,7 +36,11 @@
     <div class="col-6">
         <div class="container m-3" style="padding-top: 0.25rem;padding-bottom: 0.5rem;padding-left: 1rem;font-size: 1.25rem;">
             <CascadingValue Value="@Scripts">
-                <_ScriptMenu OnFilter="GetFilteredScripts"></_ScriptMenu>
+                <_ScriptFilterMenu OnFilter="UpdateFilteredScripts" />
+            </CascadingValue>
+
+            <CascadingValue Value="@Scripts">
+                <_ScriptSearchBar OnSelectScript="HandleScriptSelection" />
             </CascadingValue>
         </div>
     </div>
@@ -69,7 +73,7 @@
         base.OnParametersSet();
     }
 
-    private async void GetFilteredScripts(List<Script> scripts)
+    private async void UpdateFilteredScripts(List<Script> scripts)
     {
         Scripts = scripts;
         SelectorClass = Bot.Script != null ? "form-select-custom-" + Bot.Script.Type.ToString().ToLower() : "form-select-custom-none";
@@ -80,6 +84,15 @@
     {
         selectedOption = await JSRuntime.InvokeAsync<string>("selectInterop.getSelectedOption", "selectScripts");
         SelectedScript = Scripts.FirstOrDefault(m => m.Id == new Guid(selectedOption));
+        SelectorClass = SelectedScript != null ? "form-select-custom-" + SelectedScript.Type.ToString().ToLower() : "form-select-custom-none";
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async void HandleScriptSelection(Script script)
+    {
+        selectedOption = new Guid(script.Id.ToString()).ToString();
+        SelectedScript = script;
+        SelectedScriptId = script.Id.ToString();
         SelectorClass = SelectedScript != null ? "form-select-custom-" + SelectedScript.Type.ToString().ToLower() : "form-select-custom-none";
         await InvokeAsync(StateHasChanged);
     }

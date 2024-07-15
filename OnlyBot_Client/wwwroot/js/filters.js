@@ -31,44 +31,77 @@ window.selectInterop = {
 };
 
 window.searchInterop = {
-    initializeTypeaheadForScripts: function(inputId, scriptNames) {
+    initializeTypeaheadForScripts: function (inputId, scriptNames) {
         // Vérifiez que Bloodhound est défini
         if (typeof Bloodhound !== 'undefined') {
             var scripts = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                datumTokenizer: function (datum) {
+                    return Bloodhound.tokenizers.whitespace(datum);
+                },
                 queryTokenizer: Bloodhound.tokenizers.whitespace,
                 local: scriptNames,
-                limit: 10
+                identify: function (obj) { return obj; }
             });
 
-            $('#' + inputId).typeahead(
+            var substringMatcher = function (strs) {
+                return function findMatches(q, cb) {
+                    var matches = [];
+                    var substrRegex = new RegExp(q, 'i');
+                    $.each(strs, function (i, str) {
+                        if (substrRegex.test(str)) {
+                            matches.push(str);
+                        }
+                    });
+                    cb(matches);
+                };
+            };
+
+            var $input = $('#' + inputId);
+
+            // Détruire le typeahead existant s'il existe
+            if ($input.data('ttTypeahead')) {
+                $input.typeahead('destroy');
+                $input.off('typeahead:selected');
+            }
+
+            $input.typeahead(
                 {
                     hint: false,
-                    highlight: false,
+                    highlight: true,
                     minLength: 1
                 },
                 {
                     name: 'scripts',
-                    source: scripts,
+                    source: substringMatcher(scriptNames),
                     limit: 10, // Limiter le nombre de suggestions à 10
                     templates: {
                         suggestion: function (data) {
-                            return '<p>' + data + '</p>';
+                            // Highlight the matching part of the text
+                            var query = $input.typeahead('val');
+                            var regex = new RegExp('(' + query + ')', 'gi');
+                            var highlightedText = data.replace(regex, "<strong class='tt-highlight'>$1</strong>");
+                            return '<p>' + highlightedText + '</p>';
                         }
                     }
                 }
-            ).on('typeahead:selected', function (event, suggestion) {
+            ).on('typeahead:selected', async function (event, suggestion) {
                 $(this).typeahead('val', suggestion);
-                DotNet.invokeMethodAsync('OnlyBot_Client', 'UpdateSearchQuery', suggestion);
+                await DotNet.invokeMethodAsync('OnlyBot_Client', 'UpdateSearchQuery', suggestion);
             });
         } else {
             console.error("Bloodhound is not defined.");
         }
     },
+    updateTypeaheadList: function (inputId, newScriptNames) {
+        var $input = $('#' + inputId);
 
-    updateTypeaheadList: function (inputId, scriptNames) {
-        console.log("Updating Typeahead...");
-        $('#' + inputId).typeahead('destroy');
-        window.searchInterop.initializeTypeaheadForScripts(inputId, scriptNames);
+        // Détruire le typeahead existant s'il existe
+        if ($input.data('ttTypeahead')) {
+            $input.typeahead('destroy');
+            $input.off('typeahead:selected');
+        }
+
+        // Réinitialiser le typeahead avec les nouveaux scripts
+        searchInterop.initializeTypeaheadForScripts(inputId, newScriptNames);
     }
-}
+};

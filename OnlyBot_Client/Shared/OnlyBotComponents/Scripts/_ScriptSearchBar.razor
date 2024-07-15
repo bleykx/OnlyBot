@@ -1,0 +1,39 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div class="mt-4">
+    <form class="d-flex">
+        <input id="searchInput" class="form-control me-2" type="search" placeholder="Search scripts" @bind="searchQuery" />
+        <button class="btn btn-outline-success" type="button" @onclick="SelectScript" disabled="@IsSelectButtonDisabled">Select</button>
+    </form>
+</div>
+
+@code {
+    [CascadingParameter]
+    public List<Script> Scripts { get; set; }
+
+    [Parameter]
+    public EventCallback<Script> OnSelectScript { get; set; }
+
+    private string searchQuery;
+    private bool IsSelectButtonDisabled => string.IsNullOrEmpty(searchQuery) || !Scripts.Select(s => s.Name).ToList().Any(s => s == searchQuery);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "searchInput", Scripts.Select(s => s.Name).ToList());
+        }
+    }
+
+    public async Task UpdateSearchQuery(string query)
+    {
+        searchQuery = query;
+        StateHasChanged();
+    }
+
+    private async Task SelectScript()
+    {
+        var script = Scripts.FirstOrDefault(s => s.Name == searchQuery);
+        await OnSelectScript.InvokeAsync(script);
+    }
+}
