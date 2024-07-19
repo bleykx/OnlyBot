@@ -2,7 +2,7 @@
 
 <div class="mt-4">
     <form class="d-flex">
-        <input id="searchInput" class="form-control me-2" type="search" placeholder="Search proxies" @bind="searchQuery" />
+        <input id="proxiesSearchInput" class="form-control me-2" type="search" placeholder="Search proxies" @bind="searchQuery" />
         <button class="btn btn-outline-success" type="button" @onclick="SelectProxy" disabled="@IsSelectButtonDisabled">Select</button>
     </form>
 </div>
@@ -10,7 +10,7 @@
 @code {
     [CascadingParameter]
     public List<Proxy> Proxies { get; set; }
-    [CascadingParameter]
+    [Parameter]
     public EventCallback<Proxy> OnSelectProxy { get; set; }
     private string searchQuery;
     private bool IsSelectButtonDisabled => string.IsNullOrEmpty(searchQuery) || !Proxies.Select(p => p.Name).ToList().Any(p => p == searchQuery);
@@ -19,7 +19,7 @@
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForProxies", "searchInput", Proxies.Select(p => p.Name).ToList());
+            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "proxiesSearchInput", Proxies.Select(p => p.Name).ToList());
         }
     }
 

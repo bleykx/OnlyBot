@@ -2,7 +2,7 @@
 
 <div class="mt-4">
     <form class="d-flex">
-        <input id="searchInput" class="form-control me-2" type="search" placeholder="Search scripts" @bind="searchQuery" />
+        <input id="scriptsSearchInput" class="form-control me-2" type="search" placeholder="Search scripts" @bind="searchQuery" />
         <button class="btn btn-outline-success" type="button" @onclick="SelectScript" disabled="@IsSelectButtonDisabled">Select</button>
     </form>
 </div>
@@ -19,10 +19,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "searchInput", Scripts.Select(s => s.Name).ToList());
-        }
+            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "scriptsSearchInput", Scripts.Select(s => s.Name).ToList());
     }
 
     public async Task UpdateSearchQuery(string query)

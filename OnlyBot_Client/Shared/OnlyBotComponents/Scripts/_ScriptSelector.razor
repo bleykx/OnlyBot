@@ -1,6 +1,20 @@
 ﻿@inject IJSRuntime JSRuntime
 
 <div class="row g-0">
+    <div class="row d-flex align-items-center">
+        <div class="col-2 m-2">
+            <h3>
+                Script
+            </h3>
+        </div>
+
+        @* J'ai besoin que cette div ait son contenu justifié à la fin' *@
+        <div class="col-4 d-flex justify-content-end">
+            <CascadingValue Value="@Scripts">
+                <_ScriptFilterMenu OnFilter="UpdateFilteredScripts" />
+            </CascadingValue>
+        </div>
+    </div>
     <div class="col-6">
         <select @onclick="CheckSelectedOption" @bind="@SelectedScriptId" class="form-select form-select-lg m-3 @SelectorClass" aria-label="Large select example" id="selectScripts">
             @foreach (var script in Scripts)
@@ -35,9 +49,6 @@
     </div>
     <div class="col-6">
         <div class="container m-3" style="padding-top: 0.25rem;padding-bottom: 0.5rem;padding-left: 1rem;font-size: 1.25rem;">
-            <CascadingValue Value="@Scripts">
-                <_ScriptFilterMenu OnFilter="UpdateFilteredScripts" />
-            </CascadingValue>
 
             <CascadingValue Value="@Scripts">
                 <_ScriptSearchBar OnSelectScript="HandleScriptSelection" />
