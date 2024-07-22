@@ -13,19 +13,35 @@
 
     [Parameter]
     public EventCallback<Script> OnSelectScript { get; set; }
+    private static _ScriptSearchBar _instance;
 
     private string searchQuery;
     private bool IsSelectButtonDisabled => string.IsNullOrEmpty(searchQuery) || !Scripts.Select(s => s.Name).ToList().Any(s => s == searchQuery);
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "scriptsSearchInput", Scripts.Select(s => s.Name).ToList());
+        _instance = this;
     }
 
-    public async Task UpdateSearchQuery(string query)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        searchQuery = query;
-        StateHasChanged();
+        await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "scriptsSearchInput", Scripts.Select(s => s.Name).ToList());
+    }
+
+
+    [JSInvokable("UpdateScriptSearchQuery")]
+    public static Task UpdateScriptSearchQuery(string query)
+    {
+        
+        if (_instance != null)
+        {
+            _instance.searchQuery = query;
+            _instance.InvokeAsync( () =>
+           {
+               _instance.StateHasChanged();
+           });
+        }
+        return Task.CompletedTask;
     }
 
     private async Task SelectScript()

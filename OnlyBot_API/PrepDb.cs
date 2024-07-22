@@ -301,7 +301,15 @@ namespace OnlyBot
                     {
                         BotId = bot1.Id,
                         Kamas = 1000000,
-                        Type = InventoryTypeEnum.Bag
+                        Type = InventoryTypeEnum.Bag,
+                        Items = new List<Item>
+                        {
+                            new Item
+                            {
+                                Id = Guid.NewGuid(),
+                                
+                            }
+                        }
                     },
                     new Inventory()
                     {

@@ -1,0 +1,52 @@
+﻿@inject IJSRuntime JS
+
+<div class="carte-container" id="carteContainer">
+    <div class="carte" id="carte">
+        @for (int y = 0; y < 13; y++)
+        {
+            for (int x = 0; x < 16; x++)
+            {
+                if (mapNumber == 209)
+                    mapNumber = 1;
+
+                string mapPath = $"/images/maps/{mapNumber}.jpg";
+                <div class="cellule"
+                     style="background-image: url(@mapPath); left: @(x * 250)px; top: @(y * 250)px;">
+                </div>
+                mapNumber++;
+            }
+        }
+    </div>
+    <div id="grille"></div>
+
+</div>
+
+@code {
+    private int mapNumber = 1;
+    private bool _scriptLoaded = false;
+
+    private async Task ZoomIn()
+    {
+        if (_scriptLoaded)
+        {
+            await JS.InvokeVoidAsync("zoomIn"); // Passer la position du curseur pour Zoom In
+        }
+    }
+
+    private async Task ZoomOut()
+    {
+        if (_scriptLoaded)
+        {
+            await JS.InvokeVoidAsync("zoomOut"); // Passer la position du curseur pour Zoom Out
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initializeMap");
+            _scriptLoaded = true;
+        }
+    }
+}

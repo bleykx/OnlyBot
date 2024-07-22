@@ -89,6 +89,7 @@
     {
         var filtersExist = await LocalStorageService.ContainKeyAsync("ScriptsFilters");
         List<Script> scripts;
+
         if (filtersExist)
         {
             filters = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(await LocalStorageService.GetItemAsStringAsync("ScriptsFilters"))!;
@@ -99,7 +100,7 @@
         {
             scripts = await _scriptService.GetAll();
         }
+
         await JSRuntime.InvokeVoidAsync("searchInterop.updateTypeaheadList", "searchInput", scripts.Select(s => s.Name).ToList());
     }
 }
-

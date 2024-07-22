@@ -12,6 +12,8 @@
     public List<Proxy> Proxies { get; set; }
     [Parameter]
     public EventCallback<Proxy> OnSelectProxy { get; set; }
+    private static _ProxySearchBar _instance;
+
     private string searchQuery;
     private bool IsSelectButtonDisabled => string.IsNullOrEmpty(searchQuery) || !Proxies.Select(p => p.Name).ToList().Any(p => p == searchQuery);
 
@@ -19,19 +21,33 @@
     {
         if (firstRender)
         {
-            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForScripts", "proxiesSearchInput", Proxies.Select(p => p.Name).ToList());
+            await JSRuntime.InvokeVoidAsync("searchInterop.initializeTypeaheadForProxies", "proxiesSearchInput", Proxies.Select(p => p.Name).ToList());
         }
     }
 
-    public async Task UpdateSearchQuery(string query)
+    protected override void OnInitialized()
     {
-        searchQuery = query;
-        StateHasChanged();
+        _instance = this;
     }
 
     private async Task SelectProxy()
     {
         var proxy = Proxies.FirstOrDefault(p => p.Name == searchQuery);
         await OnSelectProxy.InvokeAsync(proxy);
+    }
+
+    [JSInvokable("UpdateProxySearchQuery")]
+    public static Task UpdateProxySearchQuery(string query)
+    {
+
+        if (_instance != null)
+        {
+            _instance.searchQuery = query;
+            _instance.InvokeAsync(() =>
+           {
+               _instance.StateHasChanged();
+           });
+        }
+        return Task.CompletedTask;
     }
 }
